@@ -1,61 +1,290 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# HireSmart Backend System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A comprehensive backend system for connecting job seekers with employers, built with Laravel 12, PostgreSQL, and Redis.
 
-## About Laravel
+## 🏗️ Project Structure
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+```
+hire-smart-backend/
+├── docker/                                    # Docker configuration files
+│   ├── nginx/
+│   │   └── nginx.conf                        # Nginx web server configuration
+│   ├── php/
+│   │   ├── php.ini                          # PHP configuration
+│   │   └── opcache.ini                      # OPcache configuration
+│   └── supervisor/
+│       └── supervisord.conf                 # Supervisor configuration
+├── html/
+│   └── hiresmart-backend.rokanchowdhuryonick.com/  # Laravel application
+│       ├── app/                             # Application code
+│       ├── config/                          # Configuration files
+│       ├── database/                        # Migrations, seeders, factories
+│       ├── public/                          # Web server document root
+│       ├── resources/                       # Views, assets
+│       ├── routes/                          # Route definitions
+│       ├── storage/                         # File storage, logs, cache
+│       ├── tests/                           # Test files
+│       ├── .env.example                     # Environment variables template
+│       ├── artisan                          # Laravel command-line interface
+│       ├── composer.json                    # PHP dependencies
+│       └── package.json                     # Node.js dependencies
+├── docker-compose.yml                        # Docker services configuration
+├── Dockerfile                               # Docker image configuration
+└── README.md                               # This file
+```
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🚀 Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Core Features
+- **JWT Authentication** with role-based access control (Admin, Employer, Candidate)
+- **Job Management** - Create, update, delete, and search job listings
+- **Application System** - Candidates can apply to jobs, employers can manage applications
+- **User Profiles** - Separate profile management for candidates and employers
+- **Hierarchical Location System** - Country → State → City → Area structure
+- **Skills Management** - Dynamic skill matching between jobs and candidates
 
-## Learning Laravel
+### Advanced Features
+- **Background Job Matching** - Automated candidate-job matching based on skills, location, and salary
+- **Scheduled Tasks** - Daily job archiving and weekly user cleanup
+- **Caching** - Redis-based caching for job listings and statistics
+- **Notifications** - System notifications for job matches and applications
+- **Rate Limiting** - API rate limiting for security
+- **File Upload** - Resume upload functionality
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🔧 Technology Stack
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- **Backend Framework**: Laravel 12
+- **Database**: PostgreSQL 15
+- **Cache/Queue**: Redis 7
+- **Web Server**: Nginx (Alpine)
+- **PHP**: 8.3 with OPcache
+- **Authentication**: JWT (tymon/jwt-auth)
+- **Containerization**: Docker & Docker Compose
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 📋 Prerequisites
 
-## Laravel Sponsors
+- Docker and Docker Compose installed
+- Git for version control
+- Minimum 4GB RAM for containers
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🚀 Quick Start
 
-### Premium Partners
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/hire-smart-backend.git
+cd hire-smart-backend
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 2. Environment Setup
+```bash
+# Copy environment file
+cp html/hiresmart-backend.rokanchowdhuryonick.com/.env.example html/hiresmart-backend.rokanchowdhuryonick.com/.env
 
-## Contributing
+# Edit the .env file with your configuration
+# Key variables to configure:
+# - DB_DATABASE, DB_USERNAME, DB_PASSWORD
+# - JWT_SECRET (generate with: php artisan jwt:secret)
+# - APP_KEY (generate with: php artisan key:generate)
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Build and Start Services
+```bash
+# Build and start all services
+docker-compose up -d --build
 
-## Code of Conduct
+# Check service status
+docker-compose ps
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 4. Application Setup
+```bash
+# Enter the application container
+docker-compose exec hire-smart-backend-app bash
 
-## Security Vulnerabilities
+# Install dependencies
+composer install
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Generate application key
+php artisan key:generate
 
-## License
+# Generate JWT secret
+php artisan jwt:secret
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Run migrations
+php artisan migrate
+
+# Seed the database
+php artisan db:seed
+```
+
+## 🌐 Access Points
+
+- **Application**: http://localhost:8080
+- **pgAdmin**: http://localhost:8081
+  - Email: hello+pgadmin@rokanbd.cf
+  - Password: admin123
+- **API Documentation**: http://localhost:8080/api/docs (when implemented)
+
+## 📊 Database Schema
+
+### Core Tables
+- `users` - Authentication and basic user info
+- `user_profiles` - Extended user profiles (candidates)
+- `companies` - Company information (employers)
+- `jobs` - Job listings
+- `applications` - Job applications
+- `skills` - Master skills list
+- `job_skills` / `user_skills` - Skill relationships
+
+### Location Tables
+- `countries` - Country data
+- `states` - State/province data
+- `cities` - City data
+- `areas` - Area/district data
+
+### System Tables
+- `notifications` - System notifications
+- `job_matches` - Background job matching results
+
+## 🔐 Security Features
+
+- **OWASP Top 10 Compliance**
+- **JWT Authentication** with refresh tokens
+- **Rate Limiting** on sensitive endpoints
+- **Input Validation** and sanitization
+- **XSS Protection** with security headers
+- **CSRF Protection**
+- **SQL Injection Prevention** via Eloquent ORM
+
+## 📡 API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/refresh` - Refresh JWT token
+- `POST /api/auth/logout` - User logout
+
+### Jobs
+- `GET /api/jobs` - List jobs (with filtering)
+- `POST /api/jobs` - Create job (employer only)
+- `GET /api/jobs/{id}` - Get job details
+- `PUT /api/jobs/{id}` - Update job (employer only)
+- `DELETE /api/jobs/{id}` - Delete job (employer only)
+
+### Applications
+- `POST /api/jobs/{id}/apply` - Apply to job
+- `GET /api/applications` - List applications (role-based)
+- `PUT /api/applications/{id}/status` - Update application status
+
+### Admin
+- `GET /api/admin/metrics` - Platform statistics
+- `GET /api/admin/users` - User management
+
+## 🔄 Background Jobs
+
+### Job Matching
+- Runs hourly to match candidates with suitable jobs
+- Based on skills, location, and salary preferences
+- Sends notifications for matches
+
+### Scheduled Tasks
+- **Daily**: Archive jobs older than 30 days
+- **Weekly**: Remove unverified users
+
+## 📈 Performance Features
+
+- **OPcache** for PHP bytecode caching
+- **Redis Caching** for database query results
+- **Database Indexing** for optimal query performance
+- **Nginx Gzip Compression**
+- **Static File Caching**
+
+## 🐳 Docker Services
+
+- **hire-smart-backend-app** - Laravel application (PHP-FPM)
+- **hire-smart-backend-nginx** - Web server
+- **hire-smart-backend-db** - PostgreSQL database
+- **hire-smart-backend-redis** - Redis cache/queue
+- **hire-smart-backend-queue** - Queue worker
+- **hire-smart-backend-scheduler** - Task scheduler
+- **hire-smart-backend-pgadmin** - Database management (optional)
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+docker-compose exec hire-smart-backend-app php artisan test
+
+# Run specific test suite
+docker-compose exec hire-smart-backend-app php artisan test --testsuite=Feature
+```
+
+## 🔍 Monitoring & Logs
+
+```bash
+# View application logs
+docker-compose logs hire-smart-backend-app
+
+# View all service logs
+docker-compose logs
+
+# Enter container for debugging
+docker-compose exec hire-smart-backend-app bash
+```
+
+## 📦 Deployment
+
+This project is containerized and ready for deployment to any Docker-compatible environment:
+
+- **Development**: Docker Compose (current setup)
+- **Production**: Docker Swarm, Kubernetes, or cloud container services
+- **CI/CD**: GitHub Actions workflow included
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new features
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🔧 Architecture Decisions
+
+### Service Layer Pattern
+- **Controllers**: Handle HTTP requests/responses only
+- **Services**: Contain business logic and orchestration
+- **Models**: Handle data access and relationships
+- **Repositories**: Not used (avoiding unnecessary abstraction)
+
+### Security Approach
+- JWT for stateless authentication
+- Role-based access control
+- Input validation at request level
+- Rate limiting for abuse prevention
+
+### Database Design
+- Normalized relational structure
+- Hierarchical location system for scalability
+- Separate skills tables for flexibility
+- Soft deletes for audit trails
+
+### Caching Strategy
+- Redis for session storage
+- Query result caching
+- Job listing caching (5-minute TTL)
+- Location data caching (24-hour TTL)
+
+## 📞 Say Hello
+
+For issues and questions:
+- Create an issue on GitHub
+- Email: hello@rokanchowdhuryonick.com
+- Documentation: [Link to docs]
+
+---
+
+**.\ The End**
