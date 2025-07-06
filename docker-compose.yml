@@ -1,10 +1,9 @@
-version: '3.8'
-
 services:
   hire-smart-backend-app:
     build:
       context: .
       dockerfile: Dockerfile
+    image: hiresmart-backend-app:latest
     container_name: hire-smart-backend-app
     restart: unless-stopped
     working_dir: /var/www/html
@@ -65,9 +64,7 @@ services:
       - hire-smart-backend-network
 
   hire-smart-backend-queue:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: hiresmart-backend-app:latest
     container_name: hire-smart-backend-queue
     restart: unless-stopped
     working_dir: /var/www/html
@@ -89,9 +86,7 @@ services:
       - QUEUE_CONNECTION=redis
 
   hire-smart-backend-scheduler:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: hiresmart-backend-app:latest
     container_name: hire-smart-backend-scheduler
     restart: unless-stopped
     working_dir: /var/www/html

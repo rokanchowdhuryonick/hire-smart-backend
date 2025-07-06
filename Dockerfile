@@ -1,37 +1,36 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.3-fpm
 
 # Set working directory
 WORKDIR /var/www/html
 
 # Install system dependencies
-RUN apk add --no-cache \
-    build-base \
+RUN apt-get update && apt-get install -y \
+    build-essential \
     libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
     libzip-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libpq-dev \
+    libonig-dev \
     zip \
     unzip \
     git \
     curl \
-    oniguruma-dev \
-    postgresql-dev \
-    bash \
+    netcat-openbsd \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
-        bcmath \
-        exif \
-        gd \
-        mbstring \
         pdo \
         pdo_pgsql \
+        mbstring \
         zip \
+        gd \
         opcache \
-        pcntl \
-        sockets
-
-# Install Redis extension
-RUN pecl install redis && docker-php-ext-enable redis
+        bcmath \
+        exif \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
 COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
