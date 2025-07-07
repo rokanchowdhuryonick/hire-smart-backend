@@ -18,7 +18,7 @@ return new class extends Migration
             $table->boolean('is_required')->default(true);
             $table->timestamps();
             
-            $table->unique(['job_id', 'skill_id']);
+            $table->unique(['job_posting_id', 'skill_id']);
             $table->index('skill_id');
         });
     }
