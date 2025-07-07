@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         // Create the first admin user
         $this->call([
             AdminSeeder::class,
+            LocationSeeder::class,
         ]);
     }
 }
