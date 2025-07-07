@@ -24,7 +24,7 @@ services:
       - QUEUE_CONNECTION=redis
 
   hire-smart-backend-nginx:
-    image: nginx:alpine
+    image: nginx:stable
     container_name: hire-smart-backend-nginx
     restart: unless-stopped
     ports:
@@ -38,7 +38,7 @@ services:
       - hire-smart-backend-network
 
   hire-smart-backend-db:
-    image: postgres:15-alpine
+    image: postgres:15
     container_name: hire-smart-backend-db
     restart: unless-stopped
     environment:
@@ -53,7 +53,7 @@ services:
       - hire-smart-backend-network
 
   hire-smart-backend-redis:
-    image: redis:7-alpine
+    image: redis:7
     container_name: hire-smart-backend-redis
     restart: unless-stopped
     ports:
@@ -111,7 +111,7 @@ services:
     container_name: hire-smart-backend-pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@hiresmart.com}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-hello+pgadmin@rokanbd.cf}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
     ports:
       - "8081:80"
