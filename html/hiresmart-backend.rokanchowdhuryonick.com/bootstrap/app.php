@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register custom authenticate middleware for API routes
         $middleware->alias([
             'auth' => \App\Http\Middleware\Authenticate::class,
+            'role' => \App\Http\Middleware\CheckRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

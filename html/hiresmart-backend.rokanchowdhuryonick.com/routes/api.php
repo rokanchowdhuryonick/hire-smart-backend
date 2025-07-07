@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\Auth\AuthController;
+use App\Http\Controllers\API\Auth\PasswordResetController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,10 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    
+    // Password Reset Routes
+    Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
 });
 
 // Protected Routes (Authentication Required)
@@ -39,21 +44,73 @@ Route::middleware('auth:api')->group(function () {
         ]);
     });
     
-    // TODO: Add more protected routes here
-    // Route::prefix('jobs')->group(function () {
-    //     Route::get('/', [JobController::class, 'index']);
-    //     Route::get('/{job}', [JobController::class, 'show']);
-    // });
+    // Role-based test routes for middleware testing
     
-    // TODO: Employer-only routes will go here
-    // Route::middleware('role:employer')->group(function () {
-    //     Route::post('/jobs', [JobController::class, 'store']);
-    //     Route::put('/jobs/{job}', [JobController::class, 'update']);
-    // });
+    // Employer-only routes
+    Route::middleware('role:employer')->group(function () {
+        Route::get('/employer/dashboard', function () {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Welcome to Employer Dashboard!',
+                'user' => auth()->user()
+            ]);
+        });
+        
+        Route::get('/employer/jobs', function () {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Employer job listings',
+                'user_role' => auth()->user()->role
+            ]);
+        });
+    });
     
-    // TODO: Admin-only routes will go here
-    // Route::middleware('role:admin')->group(function () {
-    //     Route::get('/admin/users', [AdminController::class, 'users']);
-    //     Route::get('/admin/metrics', [AdminController::class, 'metrics']);
-    // });
+    // Candidate-only routes
+    Route::middleware('role:candidate')->group(function () {
+        Route::get('/candidate/dashboard', function () {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Welcome to Candidate Dashboard!',
+                'user' => auth()->user()
+            ]);
+        });
+        
+        Route::get('/candidate/applications', function () {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Your job applications',
+                'user_role' => auth()->user()->role
+            ]);
+        });
+    });
+    
+    // Admin-only routes
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/dashboard', function () {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Welcome to Admin Dashboard!',
+                'user' => auth()->user()
+            ]);
+        });
+        
+        Route::get('/admin/users', function () {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'All system users',
+                'user_role' => auth()->user()->role
+            ]);
+        });
+    });
+    
+    // Multi-role route (employer or admin)
+    Route::middleware('role:employer,admin')->group(function () {
+        Route::get('/management/overview', function () {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Management overview - accessible by employers and admins',
+                'user_role' => auth()->user()->role
+            ]);
+        });
+    });
 }); 
