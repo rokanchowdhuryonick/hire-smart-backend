@@ -5,35 +5,29 @@ namespace App\Http\Controllers\API\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Http\JsonResponse;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
     /**
-     * Create a new AuthController instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        // Middleware is now handled in routes for better organization
-    }
-
-    /**
-     * Register a new user.
+     * Register a new user
      *
      * @param Request $request
-     * @return JsonResponse
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function register(Request $request): JsonResponse
+    public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'role' => 'in:employer,candidate',
+            'phone' => 'nullable|string|max:20',
+            'location' => 'nullable|string|max:255',
+            'expected_salary' => 'nullable|numeric|min:0',
+            'company_name' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -48,18 +42,23 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $request->role ?? 'candidate',
+            'phone' => $request->phone,
+            'location' => $request->location,
+            'expected_salary' => $request->expected_salary,
+            'company_name' => $request->company_name,
         ]);
 
-        $token = Auth::login($user);
+        $token = JWTAuth::fromUser($user);
 
         return response()->json([
             'status' => 'success',
-            'message' => 'User registered successfully',
+            'message' => 'Registration successful',
             'user' => $user,
             'authorization' => [
                 'token' => $token,
                 'type' => 'bearer',
-                'expires_in' => config('jwt.ttl') * 60
+                'expires_in' => auth()->factory()->getTTL() * 60
             ]
         ], 201);
     }
@@ -68,9 +67,9 @@ class AuthController extends Controller
      * Get a JWT via given credentials.
      *
      * @param Request $request
-     * @return JsonResponse
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function login(Request $request): JsonResponse
+    public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
@@ -85,35 +84,50 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $credentials = $request->only('email', 'password');
+        $credentials = $request->only(['email', 'password']);
 
-        if (!$token = Auth::attempt($credentials)) {
+        if (!$token = JWTAuth::attempt($credentials)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Invalid credentials'
             ], 401);
         }
 
+        $user = auth()->user();
+
         return response()->json([
             'status' => 'success',
             'message' => 'Login successful',
-            'user' => Auth::user(),
+            'user' => $user,
             'authorization' => [
                 'token' => $token,
                 'type' => 'bearer',
-                'expires_in' => config('jwt.ttl') * 60
+                'expires_in' => auth()->factory()->getTTL() * 60
             ]
+        ]);
+    }
+
+    /**
+     * Get the authenticated User.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function me()
+    {
+        return response()->json([
+            'status' => 'success',
+            'user' => auth()->user()
         ]);
     }
 
     /**
      * Log the user out (Invalidate the token).
      *
-     * @return JsonResponse
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function logout(): JsonResponse
+    public function logout()
     {
-        Auth::logout();
+        JWTAuth::invalidate(JWTAuth::getToken());
 
         return response()->json([
             'status' => 'success',
@@ -124,35 +138,19 @@ class AuthController extends Controller
     /**
      * Refresh a token.
      *
-     * @return JsonResponse
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function refresh(): JsonResponse
+    public function refresh()
     {
-        $token = Auth::refresh();
+        $token = JWTAuth::refresh(JWTAuth::getToken());
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Token refreshed successfully',
-            'user' => Auth::user(),
             'authorization' => [
                 'token' => $token,
                 'type' => 'bearer',
-                'expires_in' => config('jwt.ttl') * 60
+                'expires_in' => auth()->factory()->getTTL() * 60
             ]
-        ]);
-    }
-
-    /**
-     * Get the authenticated User.
-     *
-     * @return JsonResponse
-     */
-    public function me(): JsonResponse
-    {
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Profile retrieved successfully',
-            'user' => Auth::user()
         ]);
     }
 }
