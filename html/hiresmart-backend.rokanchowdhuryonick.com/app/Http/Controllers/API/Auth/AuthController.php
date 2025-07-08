@@ -12,6 +12,11 @@ use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Http\Resources\AuthResource;
+use App\Http\Resources\ErrorResource;
+use App\Http\Resources\SuccessResource;
+use App\Http\Resources\UserResource;
+use App\Http\Resources\StatsResource;
 
 class AuthController extends Controller
 {
@@ -33,21 +38,19 @@ class AuthController extends Controller
         try {
             $result = $this->authService->register($request->validated());
 
-            return response()->json([
+            return (new AuthResource(
+                $result['user'], 
+                $result['token'], 
+                $result['token_type'], 
+                $result['expires_in']
+            ))->additional([
                 'status' => 'success',
-                'message' => 'Registration successful',
-                'user' => $result['user'],
-                'authorization' => [
-                    'token' => $result['token'],
-                    'type' => $result['token_type'],
-                    'expires_in' => $result['expires_in']
-                ]
-            ], 201);
+                'message' => 'Registration successful'
+            ])->response()->setStatusCode(201);
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], $e->getCode() ?: 500);
+            return ErrorResource::serverError($e->getMessage())
+                ->response()
+                ->setStatusCode($e->getCode() ?: 500);
         }
     }
 
@@ -62,21 +65,19 @@ class AuthController extends Controller
         try {
             $result = $this->authService->login($request->validated());
 
-            return response()->json([
+            return (new AuthResource(
+                $result['user'], 
+                $result['token'], 
+                $result['token_type'], 
+                $result['expires_in']
+            ))->additional([
                 'status' => 'success',
-                'message' => 'Login successful',
-                'user' => $result['user'],
-                'authorization' => [
-                    'token' => $result['token'],
-                    'type' => $result['token_type'],
-                    'expires_in' => $result['expires_in']
-                ]
-            ]);
+                'message' => 'Login successful'
+            ])->response();
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], $e->getCode() ?: 401);
+            return ErrorResource::unauthorized($e->getMessage())
+                ->response()
+                ->setStatusCode($e->getCode() ?: 401);
         }
     }
 
@@ -90,15 +91,15 @@ class AuthController extends Controller
         try {
             $user = $this->authService->me();
 
-            return response()->json([
-                'status' => 'success',
-                'user' => $user
-            ]);
+            return (new UserResource($user))
+                ->additional([
+                    'status' => 'success'
+                ])
+                ->response();
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 401);
+            return ErrorResource::unauthorized($e->getMessage())
+                ->response()
+                ->setStatusCode(401);
         }
     }
 
@@ -112,15 +113,12 @@ class AuthController extends Controller
         try {
             $this->authService->logout();
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Successfully logged out'
-            ]);
+            return SuccessResource::noContent('Successfully logged out')
+                ->response();
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return ErrorResource::serverError($e->getMessage())
+                ->response()
+                ->setStatusCode(500);
         }
     }
 
@@ -143,10 +141,9 @@ class AuthController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 401);
+            return ErrorResource::unauthorized($e->getMessage())
+                ->response()
+                ->setStatusCode(401);
         }
     }
 
@@ -162,16 +159,14 @@ class AuthController extends Controller
             $user = JWTAuth::user();
             $updatedUser = $this->userService->updateProfile($user, $request->validated());
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Profile updated successfully',
-                'user' => $updatedUser
-            ]);
+            return SuccessResource::updated(
+                new UserResource($updatedUser),
+                'Profile updated successfully'
+            )->response();
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], $e->getCode() ?: 500);
+            return ErrorResource::serverError($e->getMessage())
+                ->response()
+                ->setStatusCode($e->getCode() ?: 500);
         }
     }
 
@@ -187,15 +182,12 @@ class AuthController extends Controller
             $user = JWTAuth::user();
             $this->userService->changePassword($user, $request->validated());
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Password changed successfully'
-            ]);
+            return SuccessResource::noContent('Password changed successfully')
+                ->response();
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], $e->getCode() ?: 400);
+            return ErrorResource::serverError($e->getMessage())
+                ->response()
+                ->setStatusCode($e->getCode() ?: 400);
         }
     }
 
@@ -210,15 +202,15 @@ class AuthController extends Controller
             $user = JWTAuth::user();
             $stats = $this->userService->getUserStats($user);
 
-            return response()->json([
-                'status' => 'success',
-                'data' => $stats
-            ]);
+            return (new StatsResource($stats, 'user'))
+                ->additional([
+                    'status' => 'success'
+                ])
+                ->response();
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            return ErrorResource::serverError($e->getMessage())
+                ->response()
+                ->setStatusCode(500);
         }
     }
 }

@@ -10,6 +10,11 @@ use App\Services\JobService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Http\Resources\JobCollection;
+use App\Http\Resources\JobDetailResource;
+use App\Http\Resources\ErrorResource;
+use App\Http\Resources\SuccessResource;
+use App\Http\Resources\StatsResource;
 
 class JobController extends Controller
 {
@@ -20,7 +25,7 @@ class JobController extends Controller
     }
 
     /**
-     * Get employer's job postings
+     * Display a listing of the jobs for employer
      * 
      * @param Request $request
      * @return JsonResponse
@@ -38,21 +43,15 @@ class JobController extends Controller
             $perPage = min($request->get('per_page', 15), 50);
             $jobs = $this->jobService->getEmployerJobs(JWTAuth::user(), $filters, $perPage);
 
-            return response()->json([
-                'status' => 'success',
-                'data' => $jobs->items(),
-                'pagination' => [
-                    'current_page' => $jobs->currentPage(),
-                    'last_page' => $jobs->lastPage(),
-                    'per_page' => $jobs->perPage(),
-                    'total' => $jobs->total(),
-                ],
-            ]);
+            return (new JobCollection($jobs, $filters, $request->get('search')))
+                ->additional([
+                    'status' => 'success'
+                ])
+                ->response();
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], $e->getCode() ?: 500);
+            return ErrorResource::serverError($e->getMessage())
+                ->response()
+                ->setStatusCode($e->getCode() ?: 500);
         }
     }
 
@@ -69,21 +68,20 @@ class JobController extends Controller
 
             // Check ownership
             if ($job->user_id !== JWTAuth::user()->id) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Unauthorized to view this job posting',
-                ], 403);
+                return ErrorResource::forbidden('Unauthorized to view this job posting')
+                    ->response()
+                    ->setStatusCode(403);
             }
 
-            return response()->json([
-                'status' => 'success',
-                'data' => $job,
-            ]);
+            return (new JobDetailResource($job))
+                ->additional([
+                    'status' => 'success'
+                ])
+                ->response();
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], $e->getCode() ?: 500);
+            return ErrorResource::serverError($e->getMessage())
+                ->response()
+                ->setStatusCode($e->getCode() ?: 500);
         }
     }
 
@@ -98,16 +96,14 @@ class JobController extends Controller
         try {
             $job = $this->jobService->createJob(JWTAuth::user(), $request->validated());
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Job posting created successfully',
-                'data' => $job,
-            ], 201);
+            return SuccessResource::created(
+                new JobDetailResource($job),
+                'Job posting created successfully'
+            )->response();
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], $e->getCode() ?: 500);
+            return ErrorResource::serverError($e->getMessage())
+                ->response()
+                ->setStatusCode($e->getCode() ?: 500);
         }
     }
 
@@ -173,18 +169,20 @@ class JobController extends Controller
             $jobStats = $user->job_stats;
             $generalStats = $this->jobService->getJobStats();
 
-            return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'employer_stats' => $jobStats,
-                    'platform_stats' => $generalStats,
-                ],
-            ]);
+            $combinedStats = [
+                'employer_stats' => $jobStats,
+                'platform_stats' => $generalStats,
+            ];
+
+            return (new StatsResource($combinedStats, 'employer'))
+                ->additional([
+                    'status' => 'success'
+                ])
+                ->response();
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], 500);
+            return ErrorResource::serverError($e->getMessage())
+                ->response()
+                ->setStatusCode(500);
         }
     }
 
