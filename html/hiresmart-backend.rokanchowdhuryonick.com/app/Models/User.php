@@ -261,15 +261,25 @@ class User extends Authenticatable implements JWTSubject
             return [];
         }
 
-        $applications = $this->applications();
+        // Fix N+1: Single aggregated query instead of multiple count queries
+        $stats = $this->applications()
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as reviewed,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as shortlisted,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as rejected,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as hired
+            ', ['pending', 'reviewed', 'shortlisted', 'rejected', 'hired'])
+            ->first();
         
         return [
-            'total' => $applications->count(),
-            'pending' => $applications->pending()->count(),
-            'reviewed' => $applications->status('reviewed')->count(),
-            'shortlisted' => $applications->status('shortlisted')->count(),
-            'rejected' => $applications->status('rejected')->count(),
-            'hired' => $applications->status('hired')->count(),
+            'total' => (int) $stats->total,
+            'pending' => (int) $stats->pending,
+            'reviewed' => (int) $stats->reviewed,
+            'shortlisted' => (int) $stats->shortlisted,
+            'rejected' => (int) $stats->rejected,
+            'hired' => (int) $stats->hired,
         ];
     }
 

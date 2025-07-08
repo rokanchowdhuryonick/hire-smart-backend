@@ -68,7 +68,7 @@ class UserService
                 'application_stats' => $user->application_stats,
                 'profile_completed' => $this->isProfileComplete($user),
                 'skills_count' => $user->skills()->count(),
-                'recent_matches' => $user->getRecentJobMatches()->count(),
+                'recent_matches' => $user->jobMatches()->recent(7)->count(),  // ← Fix N+1: Use count query
             ]);
         }
 

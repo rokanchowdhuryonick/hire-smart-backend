@@ -233,6 +233,7 @@ class ApplicationService
             ->whereHas('jobPosting', function ($q) use ($employer) {
                 $q->where('user_id', $employer->id);
             })
+            ->with('jobPosting:id,title,user_id')  // ← Fix N+1: Eager load jobPosting
             ->get();
 
         if ($applications->isEmpty()) {
@@ -249,7 +250,7 @@ class ApplicationService
                     'reviewed_at' => $status !== 'pending' ? now() : null,
                 ]);
 
-                // Notify candidate
+                // Notify candidate (no more N+1 - jobPosting already loaded)
                 if ($status !== 'pending') {
                     Notification::createApplicationStatus(
                         $application->user_id,
@@ -367,16 +368,27 @@ class ApplicationService
      */
     private function getCandidateStats(User $candidate): array
     {
-        $applications = $candidate->applications();
+        // Fix N+1: Single aggregated query instead of multiple count queries
+        $stats = $candidate->applications()
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as reviewed,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as shortlisted,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as rejected,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as hired,
+                SUM(CASE WHEN applied_at >= ? THEN 1 ELSE 0 END) as recent
+            ', ['pending', 'reviewed', 'shortlisted', 'rejected', 'hired', now()->subDays(7)])
+            ->first();
 
         return [
-            'total' => $applications->count(),
-            'pending' => $applications->pending()->count(),
-            'reviewed' => $applications->status('reviewed')->count(),
-            'shortlisted' => $applications->status('shortlisted')->count(),
-            'rejected' => $applications->status('rejected')->count(),
-            'hired' => $applications->status('hired')->count(),
-            'recent' => $applications->recent()->count(),
+            'total' => (int) $stats->total,
+            'pending' => (int) $stats->pending,
+            'reviewed' => (int) $stats->reviewed,
+            'shortlisted' => (int) $stats->shortlisted,
+            'rejected' => (int) $stats->rejected,
+            'hired' => (int) $stats->hired,
+            'recent' => (int) $stats->recent,
         ];
     }
 
