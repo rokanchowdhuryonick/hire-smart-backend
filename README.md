@@ -174,6 +174,7 @@ The ERD includes:
 |--------|----------|-------------|------------|---------------|
 | `POST` | `/api/auth/register` | User registration | 3/60min | ❌ |
 | `POST` | `/api/auth/login` | User login | 5/15min | ❌ |
+| `POST` | `/api/auth/verify-email` | Verify email address | 5/60min | ❌ |
 | `POST` | `/api/auth/logout` | User logout | - | ✅ |
 | `POST` | `/api/auth/refresh` | Refresh JWT token | - | ✅ |
 | `GET` | `/api/auth/me` | Get current user info | - | ✅ |
@@ -357,6 +358,93 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
 }
 ```
 
+#### **📧 Email Verification Process**
+
+All new users must verify their email address before they can log in:
+
+**1. Registration Flow:**
+```bash
+POST /api/auth/register
+{
+    "name": "John Doe",
+    "email": "john@example.com", 
+    "password": "password123",
+    "password_confirmation": "password123",
+    "role": "candidate"
+}
+
+Response:
+{
+    "status": "success",
+    "message": "Registration successful. Please verify your email to activate your account.",
+    "data": {
+        "user": { "id": 123, "is_active": false, "is_verified": false },
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+        "expires_in": 3600
+    }
+}
+```
+
+**2. Login Attempt (Unverified):**
+```bash
+POST /api/auth/login
+{
+    "email": "john@example.com",
+    "password": "password123"
+}
+
+Response: 403 Forbidden
+{
+    "status": "error",
+    "message": "Please verify your email address before logging in"
+}
+```
+
+**3. Email Verification:**
+```bash
+POST /api/auth/verify-email
+{
+    "user_id": 123
+}
+
+Response:
+{
+    "status": "success",
+    "message": "Email verified successfully. Account is now active.",
+    "data": {
+        "user": { "id": 123, "is_active": true, "is_verified": true },
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+        "expires_in": 3600
+    }
+}
+```
+
+**4. Login Success (After Verification):**
+```bash
+POST /api/auth/login
+{
+    "email": "john@example.com",
+    "password": "password123"
+}
+
+Response: 200 OK
+{
+    "status": "success",
+    "message": "Login successful",
+    "data": {
+        "user": { "id": 123, "is_active": true, "is_verified": true },
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+        "expires_in": 3600
+    }
+}
+```
+
+**💡 Important Notes:**
+- Users with `is_active: false` or `email_verified_at: null` cannot log in
+- Unverified users are automatically removed after 7 days by scheduled cleanup
+- Admin users are created with verified status by default
+- Rate limit: 5 verification attempts per 60 minutes
+
 ---
 
 ### **⚡ Rate Limiting**
@@ -437,9 +525,14 @@ For comprehensive API testing, we provide a complete **Postman collection** with
 # Register new user
 curl -X POST http://localhost:8080/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"name":"John Doe","email":"john@example.com","password":"password123","role":"candidate"}'
+  -d '{"name":"John Doe","email":"john@example.com","password":"password123","password_confirmation":"password123","role":"candidate"}'
 
-# Login
+# Verify email (use user_id from registration response)
+curl -X POST http://localhost:8080/api/auth/verify-email \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":123}'
+
+# Login (after email verification)
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"john@example.com","password":"password123"}'

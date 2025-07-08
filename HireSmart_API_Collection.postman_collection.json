@@ -49,6 +49,57 @@
 					}
 				},
 				{
+					"name": "Verify Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.token) {",
+									"        pm.environment.set('token', response.data.token);",
+									"        pm.environment.set('userRole', response.data.user.role);",
+									"        ",
+									"        // Set role-specific tokens",
+									"        if (response.data.user.role === 'employer') {",
+									"            pm.environment.set('employerToken', response.data.token);",
+									"        } else if (response.data.user.role === 'candidate') {",
+									"            pm.environment.set('candidateToken', response.data.token);",
+									"        } else if (response.data.user.role === 'admin') {",
+									"            pm.environment.set('adminToken', response.data.token);",
+									"        }",
+									"        ",
+									"        console.log('Email verified for user:', response.data.user.name, '- Role:', response.data.user.role);",
+									"        console.log('Account is now active:', response.data.user.is_active);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/verify-email",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "verify-email"]
+						},
+						"description": "Verify user email address and activate account. Use the user_id from registration response. After verification, user will be able to login successfully."
+					}
+				},
+				{
 					"name": "Login User",
 					"event": [
 						{

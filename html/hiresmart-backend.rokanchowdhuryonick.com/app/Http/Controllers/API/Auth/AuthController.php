@@ -45,7 +45,7 @@ class AuthController extends Controller
                 $result['expires_in']
             ))->additional([
                 'status' => 'success',
-                'message' => 'Registration successful'
+                'message' => $result['message'] ?? 'Registration successful'
             ])->response()->setStatusCode(201);
         } catch (\Exception $e) {
             return ErrorResource::serverError($e->getMessage())
@@ -211,6 +211,37 @@ class AuthController extends Controller
             return ErrorResource::serverError($e->getMessage())
                 ->response()
                 ->setStatusCode(500);
+        }
+    }
+
+    /**
+     * Verify user email address
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function verifyEmail(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'user_id' => 'required|integer|exists:users,id'
+            ]);
+
+            $result = $this->authService->verifyEmail($request->user_id);
+
+            return (new AuthResource(
+                $result['user'], 
+                $result['token'], 
+                $result['token_type'], 
+                $result['expires_in']
+            ))->additional([
+                'status' => 'success',
+                'message' => $result['message']
+            ])->response();
+        } catch (\Exception $e) {
+            return ErrorResource::serverError($e->getMessage())
+                ->response()
+                ->setStatusCode($e->getCode() ?: 400);
         }
     }
 }

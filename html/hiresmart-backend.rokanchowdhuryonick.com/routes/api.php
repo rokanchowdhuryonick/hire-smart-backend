@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Cache;
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->middleware('ratelimit:3,60');
     Route::post('/login', [AuthController::class, 'login'])->middleware('ratelimit:5,15');
+    Route::post('/verify-email', [AuthController::class, 'verifyEmail'])->middleware('ratelimit:5,60');
     Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->middleware('ratelimit:3,15');
     Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->middleware('ratelimit:3,15');
 });

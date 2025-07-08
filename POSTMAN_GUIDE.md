@@ -83,8 +83,18 @@ Create users for each role to test all endpoints:
        "role": "candidate"
    }
    ```
+   ⚠️ **Note**: Save the `user_id` from response - you'll need it for email verification.
 
-2. **Register Employer**:
+2. **Verify Candidate Email**:
+   ```json
+   POST /auth/verify-email
+   {
+       "user_id": 1
+   }
+   ```
+   ✅ **Required**: Users must verify email before they can login successfully.
+
+3. **Register Employer**:
    ```json
    POST /auth/register
    {
@@ -96,6 +106,14 @@ Create users for each role to test all endpoints:
    }
    ```
 
+4. **Verify Employer Email**:
+   ```json
+   POST /auth/verify-email
+   {
+       "user_id": 2
+   }
+   ```
+
 ### Step 2: Login & Save Tokens
 
 The collection automatically saves JWT tokens when you login:
@@ -103,6 +121,8 @@ The collection automatically saves JWT tokens when you login:
 1. **Login as Candidate** - Token saved to `{{candidateToken}}`
 2. **Login as Employer** - Token saved to `{{employerToken}}`  
 3. **Login as Admin** - Token saved to `{{adminToken}}`
+
+⚠️ **Important**: Login will fail with 403 error if email is not verified first.
 
 Tokens are automatically used in the appropriate endpoint folders.
 
@@ -114,10 +134,12 @@ Follow this sequence for comprehensive testing:
 
 #### **Phase 1: Authentication Setup**
 1. ✅ Register Candidate
-2. ✅ Register Employer  
-3. ✅ Login as Candidate (saves `candidateToken`)
-4. ✅ Login as Employer (saves `employerToken`)
-5. ✅ Test "Get Current User" for both roles
+2. ✅ Verify Candidate Email (use user_id from registration response)
+3. ✅ Register Employer  
+4. ✅ Verify Employer Email (use user_id from registration response)
+5. ✅ Login as Candidate (saves `candidateToken`)
+6. ✅ Login as Employer (saves `employerToken`)
+7. ✅ Test "Get Current User" for both roles
 
 #### **Phase 2: Public Endpoints**
 6. ✅ Browse All Jobs (no auth required)
@@ -243,17 +265,23 @@ The collection respects API rate limits:
 - ✅ Verify you're using the correct role token
 - ✅ Try refreshing the token
 
-**2. "Connection Refused" Errors**  
+**2. "Email Verification Required" (403 Forbidden)**
+- ✅ Error: "Please verify your email address before logging in"
+- ✅ Solution: Use "Verify Email" endpoint with user_id from registration
+- ✅ Check if user is already verified (is_verified: true in response)
+- ✅ Note: Unverified users are deleted after 7 days automatically
+
+**3. "Connection Refused" Errors**  
 - ✅ Ensure Docker containers are running
 - ✅ Check if API is accessible at `http://localhost:8080`
 - ✅ Verify database connections are working
 
-**3. "Validation Errors"**
+**4. "Validation Errors"**
 - ✅ Check request body format matches examples
 - ✅ Ensure required fields are included
 - ✅ Verify data types (strings, numbers, booleans)
 
-**4. "Rate Limit Exceeded"**
+**5. "Rate Limit Exceeded"**
 - ✅ Wait for the rate limit window to reset
 - ✅ Check rate limit headers in response
 - ✅ Space out your requests appropriately
@@ -319,6 +347,7 @@ Use this checklist to ensure complete API coverage:
 
 ### Authentication ✅
 - [ ] User registration (candidate & employer)
+- [ ] Email verification (required before login)
 - [ ] User login with different roles
 - [ ] Profile updates
 - [ ] Password changes
