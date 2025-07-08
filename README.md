@@ -146,6 +146,16 @@ php artisan db:seed
 - `notifications` - System notifications
 - `job_matches` - Background job matching results
 
+### **📋 Complete Database Schema**
+For a comprehensive view of the database structure, relationships, and constraints, see the detailed **[Entity Relationship Diagram (ERD)](html/hiresmart-backend.rokanchowdhuryonick.com/ERD.md)**.
+
+The ERD includes:
+- Complete table structures with all columns and data types
+- Primary and foreign key relationships
+- Database constraints and indexes
+- Business rules and data integrity features
+- Visual Mermaid diagram of all relationships
+
 ## 🔐 Security Features
 
 - **OWASP Top 10 Compliance**
@@ -158,27 +168,267 @@ php artisan db:seed
 
 ## 📡 API Endpoints
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/refresh` - Refresh JWT token
-- `POST /api/auth/logout` - User logout
+### **🔐 Authentication & Profile Management**
 
-### Jobs
-- `GET /api/jobs` - List jobs (with filtering)
-- `POST /api/jobs` - Create job (employer only)
-- `GET /api/jobs/{id}` - Get job details
-- `PUT /api/jobs/{id}` - Update job (employer only)
-- `DELETE /api/jobs/{id}` - Delete job (employer only)
+| Method | Endpoint | Description | Rate Limit | Auth Required |
+|--------|----------|-------------|------------|---------------|
+| `POST` | `/api/auth/register` | User registration | 3/60min | ❌ |
+| `POST` | `/api/auth/login` | User login | 5/15min | ❌ |
+| `POST` | `/api/auth/logout` | User logout | - | ✅ |
+| `POST` | `/api/auth/refresh` | Refresh JWT token | - | ✅ |
+| `GET` | `/api/auth/me` | Get current user info | - | ✅ |
+| `PUT` | `/api/auth/profile` | Update user profile | - | ✅ |
+| `POST` | `/api/auth/change-password` | Change password | - | ✅ |
+| `GET` | `/api/auth/stats` | Get user statistics | - | ✅ |
+| `POST` | `/api/auth/forgot-password` | Request password reset | 3/15min | ❌ |
+| `POST` | `/api/auth/reset-password` | Reset password | 3/15min | ❌ |
 
-### Applications
-- `POST /api/jobs/{id}/apply` - Apply to job
-- `GET /api/applications` - List applications (role-based)
-- `PUT /api/applications/{id}/status` - Update application status
+---
 
-### Admin
-- `GET /api/admin/metrics` - Platform statistics
-- `GET /api/admin/users` - User management
+### **🏢 Public Job Browsing** (No Authentication Required)
+
+| Method | Endpoint | Description | Rate Limit | Auth Required |
+|--------|----------|-------------|------------|---------------|
+| `GET` | `/api/jobs` | Browse all jobs with filters | 100/60min | ❌ |
+| `GET` | `/api/jobs/{id}` | Get specific job details | 200/60min | ❌ |
+| `GET` | `/api/jobs/{id}/similar` | Get similar jobs | 50/60min | ❌ |
+| `GET` | `/api/jobs/stats` | Get job statistics | 30/60min | ❌ |
+
+**Query Parameters for Job Search:**
+- `search` - Keyword search in title/description
+- `country_id`, `state_id`, `city_id`, `area_id` - Location filters
+- `min_salary`, `max_salary` - Salary range
+- `employment_type` - full_time, part_time, contract, internship
+- `skills` - Skill IDs (comma-separated)
+- `company_id` - Filter by specific company
+- `sort_by` - created_at, salary, experience_years
+- `sort_order` - asc, desc
+- `per_page` - Results per page (max 50)
+
+---
+
+### **👔 Employer Endpoints** (Role: employer)
+
+#### **Job Management**
+| Method | Endpoint | Description | Rate Limit | Auth Required |
+|--------|----------|-------------|------------|---------------|
+| `GET` | `/api/employer/jobs` | List employer's jobs | - | ✅ (employer) |
+| `POST` | `/api/employer/jobs` | Create new job posting | - | ✅ (employer) |
+| `GET` | `/api/employer/jobs/{id}` | Get specific job | - | ✅ (employer) |
+| `PUT` | `/api/employer/jobs/{id}` | Update job posting | - | ✅ (employer) |
+| `DELETE` | `/api/employer/jobs/{id}` | Delete job posting | - | ✅ (employer) |
+| `POST` | `/api/employer/jobs/{id}/archive` | Archive job manually | - | ✅ (employer) |
+| `GET` | `/api/employer/jobs-stats` | Get job statistics | - | ✅ (employer) |
+
+#### **Application Management**
+| Method | Endpoint | Description | Rate Limit | Auth Required |
+|--------|----------|-------------|------------|---------------|
+| `GET` | `/api/employer/applications` | List all applications | - | ✅ (employer) |
+| `GET` | `/api/employer/applications/{id}` | Get application details | - | ✅ (employer) |
+| `PUT` | `/api/employer/applications/{id}/status` | Update application status | - | ✅ (employer) |
+| `PUT` | `/api/employer/applications/bulk-status` | Bulk update applications | - | ✅ (employer) |
+| `GET` | `/api/employer/applications-stats` | Get application statistics | - | ✅ (employer) |
+
+#### **Job-Specific Operations**
+| Method | Endpoint | Description | Rate Limit | Auth Required |
+|--------|----------|-------------|------------|---------------|
+| `GET` | `/api/employer/jobs/{jobId}/applications` | Applications for specific job | - | ✅ (employer) |
+| `GET` | `/api/employer/jobs/{jobId}/matches` | AI-matched candidates | - | ✅ (employer) |
+| `GET` | `/api/employer/jobs/{jobId}/find-candidates` | Find potential candidates | - | ✅ (employer) |
+
+---
+
+### **👨‍💼 Candidate Endpoints** (Role: candidate)
+
+#### **Job Discovery**
+| Method | Endpoint | Description | Rate Limit | Auth Required |
+|--------|----------|-------------|------------|---------------|
+| `GET` | `/api/candidate/jobs` | Browse jobs (authenticated) | - | ✅ (candidate) |
+| `GET` | `/api/candidate/jobs/{id}` | Get job details | - | ✅ (candidate) |
+| `POST` | `/api/candidate/jobs/{id}/apply` | Apply to job | 10/60min | ✅ (candidate) |
+| `GET` | `/api/candidate/jobs/{id}/similar` | Get similar jobs | - | ✅ (candidate) |
+| `POST` | `/api/candidate/jobs/{id}/bookmark` | Bookmark job | - | ✅ (candidate) |
+| `GET` | `/api/candidate/job-recommendations` | Get job recommendations | - | ✅ (candidate) |
+| `GET` | `/api/candidate/jobs-stats` | Get job statistics | - | ✅ (candidate) |
+
+#### **Application Management**
+| Method | Endpoint | Description | Rate Limit | Auth Required |
+|--------|----------|-------------|------------|---------------|
+| `GET` | `/api/candidate/applications` | List my applications | - | ✅ (candidate) |
+| `GET` | `/api/candidate/applications/{id}` | Get application details | - | ✅ (candidate) |
+| `DELETE` | `/api/candidate/applications/{id}` | Withdraw application | - | ✅ (candidate) |
+| `GET` | `/api/candidate/applications-stats` | Get application statistics | - | ✅ (candidate) |
+| `GET` | `/api/candidate/applications-timeline` | Get application timeline | - | ✅ (candidate) |
+| `GET` | `/api/candidate/recommendations` | Get job recommendations | - | ✅ (candidate) |
+
+---
+
+### **⚙️ Admin Endpoints** (Role: admin)
+
+#### **Dashboard & Analytics**
+| Method | Endpoint | Description | Rate Limit | Auth Required |
+|--------|----------|-------------|------------|---------------|
+| `GET` | `/api/admin/dashboard` | Platform dashboard metrics | - | ✅ (admin) |
+| `GET` | `/api/admin/system-health` | System health check | - | ✅ (admin) |
+
+#### **User Management**
+| Method | Endpoint | Description | Rate Limit | Auth Required |
+|--------|----------|-------------|------------|---------------|
+| `GET` | `/api/admin/users` | List all users with filters | - | ✅ (admin) |
+| `PUT` | `/api/admin/users/{id}/toggle-status` | Activate/deactivate user | - | ✅ (admin) |
+
+#### **System Operations**
+| Method | Endpoint | Description | Rate Limit | Auth Required |
+|--------|----------|-------------|------------|---------------|
+| `POST` | `/api/admin/run-job-matching` | Trigger job matching manually | - | ✅ (admin) |
+| `POST` | `/api/admin/archive-old-jobs` | Archive old jobs manually | - | ✅ (admin) |
+
+---
+
+### **🔑 API Response Format**
+
+#### **Success Response**
+```json
+{
+    "status": "success",
+    "message": "Operation completed successfully",
+    "data": {
+        // Response data here
+    },
+    "meta": {
+        "timestamp": "2024-01-15T10:30:00Z",
+        "execution_time": "0.15s"
+    }
+}
+```
+
+#### **Error Response**
+```json
+{
+    "status": "error",
+    "message": "Error description",
+    "code": "ERROR_CODE",
+    "errors": {
+        "field": ["Validation error message"]
+    },
+    "meta": {
+        "timestamp": "2024-01-15T10:30:00Z",
+        "endpoint": "/api/endpoint",
+        "method": "POST"
+    }
+}
+```
+
+#### **Pagination Response**
+```json
+{
+    "status": "success",
+    "data": [...],
+    "pagination": {
+        "current_page": 1,
+        "last_page": 10,
+        "per_page": 15,
+        "total": 150,
+        "from": 1,
+        "to": 15
+    }
+}
+```
+
+---
+
+### **🛡️ Authentication**
+
+#### **JWT Token Format**
+```bash
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+```
+
+#### **Token Claims**
+```json
+{
+    "iss": "hire-smart-backend",
+    "sub": "user_id",
+    "role": "candidate|employer|admin",
+    "name": "User Name",
+    "email": "user@example.com",
+    "iat": 1641891600,
+    "exp": 1641895200
+}
+```
+
+---
+
+### **⚡ Rate Limiting**
+
+Rate limits are applied per IP address:
+
+| Endpoint Type | Limit | Window | Purpose |
+|---------------|-------|--------|---------|
+| Registration | 3 requests | 60 minutes | Prevent spam accounts |
+| Login | 5 requests | 15 minutes | Brute force protection |
+| Password Reset | 3 requests | 15 minutes | Prevent abuse |
+| Job Application | 10 requests | 60 minutes | Prevent spam applications |
+| Public Job Browse | 100 requests | 60 minutes | General API protection |
+| Job Details | 200 requests | 60 minutes | High traffic endpoint |
+
+#### **Rate Limit Headers**
+```bash
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1641891600
+Retry-After: 3600
+```
+
+---
+
+### **🎯 Status Codes**
+
+| Code | Meaning | Usage |
+|------|---------|-------|
+| `200` | OK | Successful GET, PUT requests |
+| `201` | Created | Successful POST requests |
+| `204` | No Content | Successful DELETE requests |
+| `400` | Bad Request | Invalid request data |
+| `401` | Unauthorized | Authentication required |
+| `403` | Forbidden | Insufficient permissions |
+| `404` | Not Found | Resource not found |
+| `422` | Unprocessable Entity | Validation errors |
+| `429` | Too Many Requests | Rate limit exceeded |
+| `500` | Internal Server Error | Server errors |
+
+---
+
+### **📚 API Testing**
+
+Use these base URLs for testing:
+
+- **Local Development**: `http://localhost:8080/api`
+- **Production**: `https://your-domain.com/api`
+
+**Example cURL requests:**
+
+```bash
+# Register new user
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe","email":"john@example.com","password":"password123","role":"candidate"}'
+
+# Login
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john@example.com","password":"password123"}'
+
+# Browse jobs (authenticated)
+curl -X GET http://localhost:8080/api/candidate/jobs \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Create job posting
+curl -X POST http://localhost:8080/api/employer/jobs \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Software Developer","description":"Job description here",...}'
+```
 
 ## 🔄 Background Jobs
 
