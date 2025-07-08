@@ -147,7 +147,7 @@ php artisan db:seed
 - `job_matches` - Background job matching results
 
 ### **📋 Complete Database Schema**
-For a comprehensive view of the database structure, relationships, and constraints, see the detailed **[Entity Relationship Diagram (ERD)](html/hiresmart-backend.rokanchowdhuryonick.com/ERD.md)**.
+For a comprehensive view of the database structure, relationships, and constraints, see the detailed **[Entity Relationship Diagram (ERD)](./ERD.md)**.
 
 The ERD includes:
 - Complete table structures with all columns and data types
@@ -533,7 +533,7 @@ This project is licensed under the MIT License.
 For issues and questions:
 - Create an issue on GitHub
 - Email: hello@rokanchowdhuryonick.com
-- Documentation: [Link to docs]
+- Documentation: [API Documentation](#-api-endpoints)
 
 ---
 
