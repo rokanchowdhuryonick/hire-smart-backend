@@ -13,10 +13,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create the first admin user
+        // Seed master data and admin user
         $this->call([
-            AdminSeeder::class,
-            LocationSeeder::class,
+            SkillSeeder::class,        // Seed skills first (referenced by users/jobs)
+            LocationSeeder::class,     // Seed locations
+            AdminSeeder::class,        // Create admin user
         ]);
     }
 }

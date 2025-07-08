@@ -18,12 +18,10 @@ class LocationSeeder extends Seeder
     {
         $this->command->info('Seeding Bangladesh location data...');
 
-        // Create Bangladesh
-        $bangladesh = Country::create([
-            'name' => 'Bangladesh'
-        ]);
+        // Check if Bangladesh already exists
+        $bangladesh = Country::firstOrCreate(['name' => 'Bangladesh']);
 
-        // Create divisions (states)
+        // Create divisions (states) - Bulk Insert
         $divisions = [
             'Dhaka Division',
             'Chittagong Division', 
@@ -35,37 +33,103 @@ class LocationSeeder extends Seeder
             'Mymensingh Division'
         ];
 
-        foreach ($divisions as $divisionName) {
-            $division = State::create([
+        // Get existing divisions to avoid duplicates
+        $existingDivisions = State::where('country_id', $bangladesh->id)
+            ->pluck('name')->toArray();
+        
+        $newDivisions = array_diff($divisions, $existingDivisions);
+        
+        if (!empty($newDivisions)) {
+            $divisionData = array_map(fn($name) => [
                 'country_id' => $bangladesh->id,
-                'name' => $divisionName
-            ]);
-
-            // Seed cities and areas based on division
-            $this->seedCitiesAndAreas($bangladesh, $division);
+                'name' => $name,
+                'created_at' => now(),
+                'updated_at' => now()
+            ], $newDivisions);
+            
+            State::insert($divisionData);
         }
+
+        // Seed cities and areas with bulk operations
+        $this->seedCitiesAndAreasBulk($bangladesh);
 
         $this->command->info('✅ Bangladesh location data seeded successfully!');
     }
 
-    private function seedCitiesAndAreas(Country $country, State $division): void
+    private function seedCitiesAndAreasBulk(Country $country): void
     {
-        $cityData = $this->getCityData($division->name);
-
-        foreach ($cityData as $cityName => $areas) {
-            $city = City::create([
-                'state_id' => $division->id,
-                'name' => $cityName
-            ]);
-
-            // Create areas for this city
-            foreach ($areas as $areaName) {
-                Area::create([
-                    'country_id' => $country->id,
+        // Get all divisions with their data
+        $divisions = State::where('country_id', $country->id)->get();
+        
+        $allCityData = [];
+        $allAreaData = [];
+        
+        foreach ($divisions as $division) {
+            $cityData = $this->getCityData($division->name);
+            
+            foreach ($cityData as $cityName => $areas) {
+                // Prepare city data for bulk insert
+                $allCityData[] = [
                     'state_id' => $division->id,
-                    'city_id' => $city->id,
-                    'name' => $areaName
-                ]);
+                    'name' => $cityName,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ];
+            }
+        }
+        
+        // Bulk insert cities (avoid duplicates)
+        $existingCities = City::whereIn('state_id', $divisions->pluck('id'))
+            ->pluck('name', 'state_id')->toArray();
+            
+        $newCityData = array_filter($allCityData, function($city) use ($existingCities) {
+            return !isset($existingCities[$city['state_id']]) || 
+                   !in_array($city['name'], (array)$existingCities[$city['state_id']]);
+        });
+        
+        if (!empty($newCityData)) {
+            City::insert($newCityData);
+        }
+        
+        // Now get all cities with their IDs for area creation
+        $cities = City::whereIn('state_id', $divisions->pluck('id'))->get();
+        
+        foreach ($divisions as $division) {
+            $cityData = $this->getCityData($division->name);
+            
+            foreach ($cityData as $cityName => $areas) {
+                $city = $cities->where('state_id', $division->id)
+                              ->where('name', $cityName)->first();
+                
+                if ($city) {
+                    foreach ($areas as $areaName) {
+                        $allAreaData[] = [
+                            'country_id' => $country->id,
+                            'state_id' => $division->id,
+                            'city_id' => $city->id,
+                            'name' => $areaName,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ];
+                    }
+                }
+            }
+        }
+        
+        // Bulk insert areas (avoid duplicates)
+        $existingAreas = Area::whereIn('city_id', $cities->pluck('id'))
+            ->pluck('name', 'city_id')->toArray();
+            
+        $newAreaData = array_filter($allAreaData, function($area) use ($existingAreas) {
+            return !isset($existingAreas[$area['city_id']]) || 
+                   !in_array($area['name'], (array)$existingAreas[$area['city_id']]);
+        });
+        
+        if (!empty($newAreaData)) {
+            // Insert in chunks to avoid memory issues
+            $chunks = array_chunk($newAreaData, 100);
+            foreach ($chunks as $chunk) {
+                Area::insert($chunk);
             }
         }
     }
