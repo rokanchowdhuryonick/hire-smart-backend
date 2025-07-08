@@ -404,7 +404,7 @@ Response: 403 Forbidden
 ```bash
 POST /api/auth/verify-email
 {
-    "user_id": 123
+    "email": "john@example.com"
 }
 
 Response:
@@ -527,10 +527,10 @@ curl -X POST http://localhost:8080/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"name":"John Doe","email":"john@example.com","password":"password123","password_confirmation":"password123","role":"candidate"}'
 
-# Verify email (use user_id from registration response)
+# Verify email (use email from registration)
 curl -X POST http://localhost:8080/api/auth/verify-email \
   -H "Content-Type: application/json" \
-  -d '{"user_id":123}'
+  -d '{"email":"john@example.com"}'
 
 # Login (after email verification)
 curl -X POST http://localhost:8080/api/auth/login \

@@ -89,14 +89,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"user_id\": 1\n}"
+							"raw": "{\n    \"email\": \"john.doe@example.com\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/verify-email",
 							"host": ["{{baseUrl}}"],
 							"path": ["auth", "verify-email"]
 						},
-						"description": "Verify user email address and activate account. Use the user_id from registration response. After verification, user will be able to login successfully."
+						"description": "Verify user email address and activate account. Use the email address from registration. After verification, user will be able to login successfully."
 					}
 				},
 				{

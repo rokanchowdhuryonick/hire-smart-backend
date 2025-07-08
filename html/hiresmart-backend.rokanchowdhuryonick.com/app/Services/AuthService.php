@@ -43,26 +43,25 @@ class AuthService
      */
     public function login(array $credentials): array
     {
-        // Validation is handled by LoginRequest Form Request
-        if (!$token = JWTAuth::attempt($credentials)) {
+        // First, find the user and verify credentials manually
+        $user = User::where('email', $credentials['email'])->first();
+        
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
             throw new \Exception('Invalid credentials', 401);
         }
 
-        $user = JWTAuth::user();
-
-        // Check if email is verified
+        // Check if email is verified BEFORE creating token
         if (!$user->isVerified()) {
-            // Invalidate the token since we don't want unverified users to have valid tokens
-            JWTAuth::invalidate($token);
             throw new \Exception('Please verify your email address before logging in', 403);
         }
 
-        // Check if account is active
+        // Check if account is active BEFORE creating token
         if (!$user->isActive()) {
-            // Invalidate the token
-            JWTAuth::invalidate($token);
             throw new \Exception('Account is deactivated', 403);
         }
+
+        // Only create token if user is verified and active
+        $token = JWTAuth::fromUser($user);
 
         return [
             'user' => $user,
@@ -75,9 +74,13 @@ class AuthService
     /**
      * Verify user email
      */
-    public function verifyEmail(int $userId): array
+    public function verifyEmail(string $email): array
     {
-        $user = User::findOrFail($userId);
+        $user = User::where('email', $email)->first();
+        
+        if (!$user) {
+            throw new \Exception('User with this email address not found', 404);
+        }
         
         if ($user->isVerified()) {
             throw new \Exception('Email is already verified', 400);

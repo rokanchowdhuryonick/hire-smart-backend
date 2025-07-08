@@ -224,10 +224,10 @@ class AuthController extends Controller
     {
         try {
             $request->validate([
-                'user_id' => 'required|integer|exists:users,id'
+                'email' => 'required|email|exists:users,email'
             ]);
 
-            $result = $this->authService->verifyEmail($request->user_id);
+            $result = $this->authService->verifyEmail($request->email);
 
             return (new AuthResource(
                 $result['user'], 

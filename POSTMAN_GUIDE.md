@@ -83,13 +83,13 @@ Create users for each role to test all endpoints:
        "role": "candidate"
    }
    ```
-   ⚠️ **Note**: Save the `user_id` from response - you'll need it for email verification.
+   ⚠️ **Note**: Remember the email address - you'll need it for email verification.
 
 2. **Verify Candidate Email**:
    ```json
    POST /auth/verify-email
    {
-       "user_id": 1
+       "email": "candidate@test.com"
    }
    ```
    ✅ **Required**: Users must verify email before they can login successfully.
@@ -110,7 +110,7 @@ Create users for each role to test all endpoints:
    ```json
    POST /auth/verify-email
    {
-       "user_id": 2
+       "email": "employer@test.com"
    }
    ```
 
@@ -134,9 +134,9 @@ Follow this sequence for comprehensive testing:
 
 #### **Phase 1: Authentication Setup**
 1. ✅ Register Candidate
-2. ✅ Verify Candidate Email (use user_id from registration response)
+2. ✅ Verify Candidate Email (use email from registration)
 3. ✅ Register Employer  
-4. ✅ Verify Employer Email (use user_id from registration response)
+4. ✅ Verify Employer Email (use email from registration)
 5. ✅ Login as Candidate (saves `candidateToken`)
 6. ✅ Login as Employer (saves `employerToken`)
 7. ✅ Test "Get Current User" for both roles
@@ -267,7 +267,7 @@ The collection respects API rate limits:
 
 **2. "Email Verification Required" (403 Forbidden)**
 - ✅ Error: "Please verify your email address before logging in"
-- ✅ Solution: Use "Verify Email" endpoint with user_id from registration
+- ✅ Solution: Use "Verify Email" endpoint with email address from registration
 - ✅ Check if user is already verified (is_verified: true in response)
 - ✅ Note: Unverified users are deleted after 7 days automatically
 
