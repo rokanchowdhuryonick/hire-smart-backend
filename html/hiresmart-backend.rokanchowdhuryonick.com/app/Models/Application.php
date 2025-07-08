@@ -165,7 +165,7 @@ class Application extends Model
      */
     public function getDaysSinceApplicationAttribute(): int
     {
-        return $this->applied_at->diffInDays(now());
+        return Carbon::parse($this->applied_at)->diffInDays(now());
     }
 
     /**

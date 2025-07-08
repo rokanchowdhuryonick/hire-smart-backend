@@ -152,14 +152,14 @@ class UserProfile extends Model
         $currency = $this->currency ?? 'BDT';
         
         if ($this->min_salary && $this->max_salary) {
-            return "{$currency} {$this->min_salary} - {$this->max_salary}";
+            return "{$currency} " . number_format((float)$this->min_salary, 0) . " - " . number_format((float)$this->max_salary, 0);
         }
         
         if ($this->min_salary) {
-            return "{$currency} {$this->min_salary}+";
+            return "{$currency} " . number_format((float)$this->min_salary, 0) . "+";
         }
         
-        return "{$currency} Up to {$this->max_salary}";
+        return "{$currency} Up to " . number_format((float)$this->max_salary, 0);
     }
 
     /**

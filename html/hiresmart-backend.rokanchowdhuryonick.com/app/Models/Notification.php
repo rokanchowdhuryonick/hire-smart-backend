@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Carbon\Carbon;
 
 class Notification extends Model
 {
@@ -127,7 +128,7 @@ class Notification extends Model
      */
     public function getTimeAgoAttribute(): string
     {
-        return $this->created_at->diffForHumans();
+        return Carbon::parse($this->created_at)->diffForHumans();
     }
 
     /**

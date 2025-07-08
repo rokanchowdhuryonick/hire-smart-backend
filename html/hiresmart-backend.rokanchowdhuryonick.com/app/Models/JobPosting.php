@@ -38,7 +38,7 @@ class JobPosting extends Model
     protected $casts = [
         'min_salary' => 'decimal:2',
         'max_salary' => 'decimal:2',
-        'deadline' => 'date',
+        'deadline' => 'datetime',
         'archived_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -219,7 +219,7 @@ class JobPosting extends Model
      */
     public function isExpired(): bool
     {
-        return $this->deadline && $this->deadline->isPast();
+        return $this->deadline && $this->deadline < now();
     }
 
     /**
@@ -234,14 +234,14 @@ class JobPosting extends Model
         $currency = $this->currency ?? 'BDT';
         
         if ($this->min_salary && $this->max_salary) {
-            return "{$currency} {$this->min_salary} - {$this->max_salary}";
+            return "{$currency} " . number_format((float)$this->min_salary, 0) . " - " . number_format((float)$this->max_salary, 0);
         }
         
         if ($this->min_salary) {
-            return "{$currency} {$this->min_salary}+";
+            return "{$currency} " . number_format((float)$this->min_salary, 0) . "+";
         }
         
-        return "{$currency} Up to {$this->max_salary}";
+        return "{$currency} Up to " . number_format((float)$this->max_salary, 0);
     }
 
     /**
