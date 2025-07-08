@@ -406,6 +406,31 @@ Use these base URLs for testing:
 - **Local Development**: `http://localhost:8080/api`
 - **Production**: `https://your-domain.com/api`
 
+#### **🚀 Postman Collection (Recommended)**
+
+For comprehensive API testing, we provide a complete **Postman collection** with all 47 endpoints:
+
+📁 **Files Available:**
+- `HireSmart_API_Collection.postman_collection.json` - Complete API collection
+- `HireSmart_Environment.postman_environment.json` - Environment variables
+- **[📖 Postman Testing Guide](./POSTMAN_GUIDE.md)** - Complete setup & testing guide
+
+**Features:**
+- ✅ **Automatic JWT token management** for all roles
+- ✅ **47 pre-configured endpoints** with realistic request bodies
+- ✅ **Role-based authentication** (admin, employer, candidate)
+- ✅ **Environment variables** for easy testing
+- ✅ **Request validation** based on FormRequest classes
+- ✅ **Rate limiting compliance** with proper delays
+- ✅ **Complete testing workflows** with step-by-step guide
+
+**Quick Setup:**
+1. Import both JSON files into Postman
+2. Select "HireSmart Development Environment"  
+3. Follow the [Postman Guide](./POSTMAN_GUIDE.md) for complete testing workflows
+
+#### **Manual cURL Testing**
+
 **Example cURL requests:**
 
 ```bash
