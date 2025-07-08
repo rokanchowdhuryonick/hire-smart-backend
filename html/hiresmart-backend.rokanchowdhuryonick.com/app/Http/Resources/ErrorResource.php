@@ -142,9 +142,8 @@ class ErrorResource extends JsonResource
                 'ip_address' => $request->ip(),
             ],
             'support' => [
-                'contact_email' => 'support@hiresmart.com',
-                'documentation' => 'https://docs.hiresmart.com',
-                'status_page' => 'https://status.hiresmart.com',
+                'contact_email' => 'hello@rokanchowdhuryonick.com',
+                'status_page' => 'https://status.hiresmart-backend.rokanchowdhuryonick.com',
             ],
         ];
     }
@@ -152,7 +151,7 @@ class ErrorResource extends JsonResource
     /**
      * Static methods for common error types
      */
-    public static function unauthorized(string $message = null): self
+    public static function unauthorized(?string $message = null): self
     {
         return new self(
             $message ?? 'Authentication required',
@@ -161,7 +160,7 @@ class ErrorResource extends JsonResource
         );
     }
 
-    public static function forbidden(string $message = null): self
+    public static function forbidden(?string $message = null): self
     {
         return new self(
             $message ?? 'Access denied',
@@ -170,7 +169,7 @@ class ErrorResource extends JsonResource
         );
     }
 
-    public static function notFound(string $message = null): self
+    public static function notFound(?string $message = null): self
     {
         return new self(
             $message ?? 'Resource not found',
@@ -188,7 +187,7 @@ class ErrorResource extends JsonResource
         );
     }
 
-    public static function rateLimit(string $message = null): self
+    public static function rateLimit(?string $message = null): self
     {
         return new self(
             $message ?? 'Rate limit exceeded',
@@ -197,7 +196,7 @@ class ErrorResource extends JsonResource
         );
     }
 
-    public static function serverError(string $message = null): self
+    public static function serverError(?string $message = null): self
     {
         return new self(
             $message ?? 'Internal server error',

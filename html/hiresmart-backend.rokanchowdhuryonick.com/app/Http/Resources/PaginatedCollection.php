@@ -13,7 +13,7 @@ class PaginatedCollection extends ResourceCollection
     /**
      * Create a new resource instance.
      */
-    public function __construct($resource, string $resourceClass = null, array $metaData = [])
+    public function __construct($resource, ?string $resourceClass = null, array $metaData = [])
     {
         parent::__construct($resource);
         $this->resourceClass = $resourceClass;

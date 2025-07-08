@@ -181,7 +181,7 @@ class ApplicationService
     /**
      * Update application status (Employer only)
      */
-    public function updateApplicationStatus(Application $application, User $employer, string $status, string $notes = null): Application
+    public function updateApplicationStatus(Application $application, User $employer, string $status, ?string $notes = null): Application
     {
         // Check ownership
         if ($application->jobPosting->user_id !== $employer->id && !$employer->isAdmin()) {
@@ -377,7 +377,6 @@ class ApplicationService
             'rejected' => $applications->status('rejected')->count(),
             'hired' => $applications->status('hired')->count(),
             'recent' => $applications->recent()->count(),
-            'success_rate' => $this->calculateSuccessRate($applications),
         ];
     }
 
@@ -407,23 +406,14 @@ class ApplicationService
     }
 
     /**
-     * Calculate candidate success rate
-     */
-    private function calculateSuccessRate($applications): float
-    {
-        $total = $applications->count();
-        if ($total === 0) return 0;
-
-        $successful = $applications->whereIn('status', ['shortlisted', 'hired'])->count();
-        return round(($successful / $total) * 100, 2);
-    }
-
-    /**
      * Clear application cache
      */
     private function clearApplicationCache(int $userId): void
     {
+        // Clear user-specific cache
         Cache::forget('application_stats_' . $userId);
+        
+        // Clear all application-related caches using tags
         Cache::tags(['applications'])->flush();
     }
 } 

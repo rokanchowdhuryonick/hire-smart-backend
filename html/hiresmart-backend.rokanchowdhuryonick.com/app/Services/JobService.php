@@ -158,8 +158,6 @@ class JobService
             throw new \Exception('Unauthorized to update this job', 403);
         }
 
-        // Validation is handled by UpdateJobRequest Form Request
-
         DB::beginTransaction();
         try {
             // Update company if provided
@@ -200,7 +198,7 @@ class JobService
     }
 
     /**
-     * Delete job posting (soft delete)
+     * Delete job posting
      */
     public function deleteJob(JobPosting $job, User $employer): void
     {
@@ -264,7 +262,7 @@ class JobService
     }
 
     /**
-     * Get job statistics
+     * Get job statistics for application stats
      */
     public function getJobStats(): array
     {
@@ -279,19 +277,9 @@ class JobService
                     ->selectRaw('employment_type, COUNT(*) as count')
                     ->groupBy('employment_type')
                     ->pluck('count', 'employment_type'),
-                'top_locations' => JobPosting::active()
-                    ->with('city')
-                    ->selectRaw('city_id, COUNT(*) as count')
-                    ->whereNotNull('city_id')
-                    ->groupBy('city_id')
-                    ->orderByDesc('count')
-                    ->limit(10)
-                    ->get(),
             ];
         });
     }
-
-
 
     /**
      * Get or create company for employer
@@ -344,6 +332,5 @@ class JobService
     private function clearJobsCache(): void
     {
         Cache::tags(['jobs'])->flush();
-        Cache::forget('job_stats');
     }
 } 

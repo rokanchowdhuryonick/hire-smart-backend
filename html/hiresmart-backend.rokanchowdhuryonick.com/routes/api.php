@@ -10,6 +10,7 @@ use App\Http\Controllers\API\Admin\AdminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,15 +23,21 @@ use Illuminate\Support\Facades\Auth;
 |
 */
 
-// Public Routes (No Authentication Required)
+// Public Authentication Routes
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-    
-    // Password Reset Routes
-    Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
-    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('ratelimit:3,60');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('ratelimit:5,15');
+    Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->middleware('ratelimit:3,15');
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->middleware('ratelimit:3,15');
 });
+
+// Public Browse APIs (no authentication required)
+Route::get('/jobs', [CandidateJobController::class, 'index'])->middleware('ratelimit:100,60');
+Route::get('/jobs/{id}', [CandidateJobController::class, 'show'])->middleware('ratelimit:200,60');
+Route::get('/jobs/{id}/similar', [CandidateJobController::class, 'similar'])->middleware('ratelimit:50,60');
+Route::get('/jobs/stats', [CandidateJobController::class, 'stats'])->middleware('ratelimit:30,60');
+
+
 
 // Protected Routes (Authentication Required)
 Route::middleware('auth:api')->group(function () {
@@ -54,8 +61,6 @@ Route::middleware('auth:api')->group(function () {
             'user' => $request->user()
         ]);
     });
-    
-    // Role-based test routes for middleware testing
     
     // Employer API Routes
     Route::middleware('role:employer')->prefix('employer')->group(function () {
@@ -82,7 +87,10 @@ Route::middleware('auth:api')->group(function () {
         // Job Discovery
         Route::get('jobs', [CandidateJobController::class, 'index']);
         Route::get('jobs/{id}', [CandidateJobController::class, 'show']);
-        Route::post('jobs/{id}/apply', [CandidateJobController::class, 'apply']);
+        
+        // Rate limit job application endpoint (10 applications per 60 minutes to prevent abuse)
+        Route::post('jobs/{id}/apply', [CandidateJobController::class, 'apply'])->middleware('ratelimit:10,60');
+        
         Route::get('jobs/{id}/similar', [CandidateJobController::class, 'similar']);
         Route::post('jobs/{id}/bookmark', [CandidateJobController::class, 'bookmark']);
         Route::get('job-recommendations', [CandidateJobController::class, 'recommendations']);

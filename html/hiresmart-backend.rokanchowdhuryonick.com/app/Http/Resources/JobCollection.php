@@ -13,7 +13,7 @@ class JobCollection extends ResourceCollection
     /**
      * Create a new resource instance.
      */
-    public function __construct($resource, array $appliedFilters = [], string $searchQuery = null)
+    public function __construct($resource, array $appliedFilters = [], ?string $searchQuery = null)
     {
         parent::__construct($resource);
         $this->appliedFilters = $appliedFilters;
@@ -69,24 +69,27 @@ class JobCollection extends ResourceCollection
                 'contract' => 'Contract',
                 'internship' => 'Internship',
             ],
-            'experience_level' => [
-                '0' => 'Entry Level',
-                '1-2' => 'Junior (1-2 years)',
-                '3-5' => 'Mid Level (3-5 years)',
-                '6-10' => 'Senior (6-10 years)',
-                '10+' => 'Lead/Expert (10+ years)',
+            'salary' => [
+                'type' => 'range',
+                'min_field' => 'min_salary',
+                'max_field' => 'max_salary',
+                'description' => 'Salary range filter (use min_salary and max_salary parameters)'
             ],
-            'remote_work' => [
-                'remote' => 'Remote Only',
-                'hybrid' => 'Hybrid',
-                'onsite' => 'On-site',
+            'location' => [
+                'type' => 'hierarchical',
+                'fields' => ['country_id', 'state_id', 'city_id', 'area_id'],
+                'description' => 'Location hierarchy filter (most specific location takes precedence)'
             ],
-            'salary_range' => [
-                '0-30000' => 'Up to $30k',
-                '30000-50000' => '$30k - $50k',
-                '50000-80000' => '$50k - $80k',
-                '80000-120000' => '$80k - $120k',
-                '120000+' => '$120k+',
+            'other_filters' => [
+                'search' => 'Search in job title and description',
+                'skills' => 'Filter by required skills (comma-separated skill IDs)',
+                'company_id' => 'Filter by specific company',
+                'experience_years' => 'Filter by required years of experience (integer)',
+            ],
+            'sorting' => [
+                'sort_by' => ['created_at', 'min_salary', 'max_salary', 'deadline'],
+                'sort_order' => ['desc', 'asc'],
+                'default' => ['sort_by' => 'created_at', 'sort_order' => 'desc']
             ],
         ];
     }
