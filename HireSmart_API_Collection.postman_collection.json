@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "hiresmart-api-collection",
 		"name": "HireSmart Backend API Collection",
-		"description": "Complete API collection for HireSmart job portal backend system. Includes authentication, job management, applications, and admin functionality.\n\n**Base URL**: {{baseUrl}} (set to http://localhost:8080/api)\n\n**Authentication**: JWT Bearer tokens\n\n**Roles**: admin, employer, candidate",
+		"description": "## HireSmart API Collection\n\nComplete API collection for the HireSmart backend system. This collection includes endpoints for:\n\n### 🔐 Authentication\n- User registration and login (JWT)\n- Email verification\n- Password reset functionality\n- Profile management\n\n### 📚 Reference Data (NEW!)\n- Skills, countries, states, cities, areas\n- Employment types and job statuses  \n- **Use these endpoints first** to get IDs needed for job creation\n\n### 🏢 Public Job Browsing\n- Browse available jobs (no authentication required)\n- Job search and filtering\n- Similar job recommendations\n\n### 👔 Employer Features\n- Job posting and management\n- Application review and management\n- Candidate matching and discovery\n\n### 👤 Candidate Features\n- Resume upload and management\n- Job application management\n- Job recommendations\n- Application tracking\n\n### 🛠 Admin Panel\n- System administration\n- User management\n- Analytics and reporting\n\n### 📝 Workflow for Job Creation:\n1. **Get Reference Data**: Use `/reference/skills` and `/reference/countries` to get valid IDs\n2. **Get Location Hierarchy**: Use `/reference/states?country_id=X` → `/reference/cities?state_id=X` → `/reference/areas?city_id=X`\n3. **Create Job**: Use the IDs from steps 1-2 in your job posting\n\n### 🔗 Quick Links:\n- **Repository**: [GitHub](https://github.com/your-repo)\n- **Documentation**: [API Docs](https://your-docs-url)\n- **Postman Guide**: Check the POSTMAN_GUIDE.md file in the repository\n\n---\n\n**Environment Variables:**\n- `baseUrl`: Your API base URL (e.g., http://localhost:8000/api)\n- `token`: JWT token (auto-set after login)\n\n**Rate Limiting:**\nAll endpoints are rate-limited. Check individual endpoint descriptions for specific limits.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -18,9 +18,9 @@
 								"exec": [
 									"if (pm.response.code === 201) {",
 									"    const response = pm.response.json();",
-									"    if (response.data && response.data.token) {",
-									"        pm.environment.set('token', response.data.token);",
-									"        console.log('Token saved:', response.data.token);",
+									"    if (response.data && response.data.authorization.token) {",
+									"        pm.environment.set('token', response.data.authorization.token);",
+									"        console.log('Token saved:', response.data.authorization.token);",
 									"    }",
 									"}"
 								],
@@ -57,17 +57,17 @@
 								"exec": [
 									"if (pm.response.code === 200) {",
 									"    const response = pm.response.json();",
-									"    if (response.data && response.data.token) {",
-									"        pm.environment.set('token', response.data.token);",
+									"    if (response.data && response.data.authorization.token) {",
+									"        pm.environment.set('token', response.data.authorization.token);",
 									"        pm.environment.set('userRole', response.data.user.role);",
 									"        ",
 									"        // Set role-specific tokens",
 									"        if (response.data.user.role === 'employer') {",
-									"            pm.environment.set('employerToken', response.data.token);",
+									"            pm.environment.set('employerToken', response.data.authorization.token);",
 									"        } else if (response.data.user.role === 'candidate') {",
-									"            pm.environment.set('candidateToken', response.data.token);",
+									"            pm.environment.set('candidateToken', response.data.authorization.token);",
 									"        } else if (response.data.user.role === 'admin') {",
-									"            pm.environment.set('adminToken', response.data.token);",
+									"            pm.environment.set('adminToken', response.data.authorization.token);",
 									"        }",
 									"        ",
 									"        console.log('Email verified for user:', response.data.user.name, '- Role:', response.data.user.role);",
@@ -108,17 +108,17 @@
 								"exec": [
 									"if (pm.response.code === 200) {",
 									"    const response = pm.response.json();",
-									"    if (response.data && response.data.token) {",
-									"        pm.environment.set('token', response.data.token);",
+									"    if (response.data && response.data.authorization.token) {",
+									"        pm.environment.set('token', response.data.authorization.token);",
 									"        pm.environment.set('userRole', response.data.user.role);",
 									"        ",
 									"        // Set role-specific tokens",
 									"        if (response.data.user.role === 'employer') {",
-									"            pm.environment.set('employerToken', response.data.token);",
+									"            pm.environment.set('employerToken', response.data.authorization.token);",
 									"        } else if (response.data.user.role === 'candidate') {",
-									"            pm.environment.set('candidateToken', response.data.token);",
+									"            pm.environment.set('candidateToken', response.data.authorization.token);",
 									"        } else if (response.data.user.role === 'admin') {",
-									"            pm.environment.set('adminToken', response.data.token);",
+									"            pm.environment.set('adminToken', response.data.authorization.token);",
 									"        }",
 									"        ",
 									"        console.log('User logged in:', response.data.user.name, '- Role:', response.data.user.role);",
@@ -246,8 +246,8 @@
 								"exec": [
 									"if (pm.response.code === 200) {",
 									"    const response = pm.response.json();",
-									"    if (response.data && response.data.token) {",
-									"        pm.environment.set('token', response.data.token);",
+									"    if (response.authorization && response.authorization.token) {",
+									"        pm.environment.set('token', response.authorization.token);",
 									"        console.log('Token refreshed');",
 									"    }",
 									"}"
@@ -351,6 +351,137 @@
 				}
 			],
 			"description": "Authentication and user profile management endpoints."
+		},
+		{
+			"name": "📚 Reference Data",
+			"item": [
+				{
+					"name": "Get All Skills",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reference/skills",
+							"host": ["{{baseUrl}}"],
+							"path": ["reference", "skills"]
+						},
+						"description": "Get all available skills with IDs. Use these skill IDs when creating job postings or updating user profiles."
+					}
+				},
+				{
+					"name": "Get All Countries",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reference/countries",
+							"host": ["{{baseUrl}}"],
+							"path": ["reference", "countries"]
+						},
+						"description": "Get all countries with IDs. Use country_id to get states for that country."
+					}
+				},
+				{
+					"name": "Get States by Country",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reference/states?country_id=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["reference", "states"],
+							"query": [
+								{
+									"key": "country_id",
+									"value": "1",
+									"description": "Required - ID of the country to get states for"
+								}
+							]
+						},
+						"description": "Get states for a specific country. Use state_id to get cities for that state."
+					}
+				},
+				{
+					"name": "Get Cities by State",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reference/cities?state_id=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["reference", "cities"],
+							"query": [
+								{
+									"key": "state_id",
+									"value": "1",
+									"description": "Required - ID of the state to get cities for"
+								}
+							]
+						},
+						"description": "Get cities for a specific state. Use city_id to get areas for that city."
+					}
+				},
+				{
+					"name": "Get Areas by City",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reference/areas?city_id=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["reference", "areas"],
+							"query": [
+								{
+									"key": "city_id",
+									"value": "1",
+									"description": "Required - ID of the city to get areas for"
+								}
+							]
+						},
+						"description": "Get areas for a specific city. Use area_id in job postings and profiles for specific location."
+					}
+				},
+				{
+					"name": "Get Employment Types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reference/employment-types",
+							"host": ["{{baseUrl}}"],
+							"path": ["reference", "employment-types"]
+						},
+						"description": "Get all valid employment types (full_time, part_time, contract, internship). Use these values for employment_type field in job postings."
+					}
+				},
+				{
+					"name": "Get Job Statuses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reference/job-statuses",
+							"host": ["{{baseUrl}}"],
+							"path": ["reference", "job-statuses"]
+						},
+						"description": "Get all valid job statuses (active, draft, closed, archived). Use these values for status field in job postings."
+					}
+				},
+				{
+					"name": "Get All Reference Data",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reference/all",
+							"host": ["{{baseUrl}}"],
+							"path": ["reference", "all"]
+						},
+						"description": "Get all reference data in one call (skills, countries, employment types, job statuses). Use individual endpoints for location hierarchy (states/cities/areas)."
+					}
+				}
+			],
+			"description": "Public reference data endpoints. No authentication required. Get IDs for skills, countries, states, cities, areas, and other constants needed for job creation and profile management."
 		},
 		{
 			"name": "🏢 Public Job Browsing",
@@ -846,14 +977,14 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"cover_letter\": \"Dear Hiring Manager,\\n\\nI am excited to apply for the Software Developer position. With my 5 years of experience in web development and expertise in modern frameworks, I believe I would be a great fit for your team.\\n\\nI have experience with JavaScript, React, Node.js, and PostgreSQL, which align perfectly with your requirements. I am passionate about writing clean, efficient code and working collaboratively in agile environments.\\n\\nI would welcome the opportunity to discuss how my skills and experience can contribute to your team's success.\\n\\nBest regards,\\nJohn Doe\",\n    \"resume_path\": \"/uploads/resumes/john-doe-resume.pdf\"\n}"
+									"raw": "{\n    \"cover_letter\": \"Dear Hiring Manager,\\n\\nI am excited to apply for the Software Developer position. With my 5 years of experience in web development and expertise in modern frameworks, I believe I would be a great fit for your team.\\n\\nI have experience with JavaScript, React, Node.js, and PostgreSQL, which align perfectly with your requirements. I am passionate about writing clean, efficient code and working collaboratively in agile environments.\\n\\nI would welcome the opportunity to discuss how my skills and experience can contribute to your team's success.\\n\\nBest regards,\\nJohn Doe\",\n    \"additional_info\": \"Available to start immediately. Open to remote work.\"\n}"
 								},
 								"url": {
 									"raw": "{{baseUrl}}/candidate/jobs/1/apply",
 									"host": ["{{baseUrl}}"],
 									"path": ["candidate", "jobs", "1", "apply"]
 								},
-								"description": "Apply to a specific job posting."
+								"description": "Apply to a specific job posting. Resume from profile is used automatically. Requires resume to be uploaded to profile first."
 							}
 						},
 						{
@@ -1044,6 +1175,77 @@
 						}
 					],
 					"description": "Application management endpoints for candidates."
+				},
+				{
+					"name": "Profile Management",
+					"item": [
+						{
+							"name": "Upload Resume",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{candidateToken}}"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "resume",
+											"description": "Resume file (PDF, DOC, DOCX - max 5MB)",
+											"type": "file",
+											"src": []
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/candidate/profile/resume",
+									"host": ["{{baseUrl}}"],
+									"path": ["candidate", "profile", "resume"]
+								},
+								"description": "Upload resume to candidate profile. Accepts PDF, DOC, DOCX files up to 5MB. Rate limited to 5 uploads per hour."
+							}
+						},
+						{
+							"name": "Get Resume Info",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{candidateToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/candidate/profile/resume",
+									"host": ["{{baseUrl}}"],
+									"path": ["candidate", "profile", "resume"]
+								},
+								"description": "Get current resume information including URL and upload date."
+							}
+						},
+						{
+							"name": "Delete Resume",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{candidateToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/candidate/profile/resume",
+									"host": ["{{baseUrl}}"],
+									"path": ["candidate", "profile", "resume"]
+								},
+								"description": "Delete the candidate's uploaded resume from profile."
+							}
+						}
+					],
+					"description": "Resume management endpoints for candidates. Resume is required before applying to jobs."
 				}
 			],
 			"description": "All candidate-specific endpoints requiring candidate role authentication."

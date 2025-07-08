@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Employer\ApplicationController as EmployerApplicati
 use App\Http\Controllers\API\Candidate\JobController as CandidateJobController;
 use App\Http\Controllers\API\Candidate\ApplicationController as CandidateApplicationController;
 use App\Http\Controllers\API\Admin\AdminController;
+use App\Http\Controllers\API\ReferenceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\Cache;
 // Public Authentication Routes
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->middleware('ratelimit:3,60');
-    Route::post('/login', [AuthController::class, 'login']);//->middleware('ratelimit:5,15');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('ratelimit:5,15');
     Route::post('/verify-email', [AuthController::class, 'verifyEmail'])->middleware('ratelimit:5,60');
     Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->middleware('ratelimit:3,15');
     Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->middleware('ratelimit:3,15');
@@ -37,6 +38,18 @@ Route::get('/jobs', [CandidateJobController::class, 'index'])->middleware('ratel
 Route::get('/jobs/{id}', [CandidateJobController::class, 'show'])->middleware('ratelimit:200,60');
 Route::get('/jobs/{id}/similar', [CandidateJobController::class, 'similar'])->middleware('ratelimit:50,60');
 Route::get('/jobs/stats', [CandidateJobController::class, 'stats'])->middleware('ratelimit:30,60');
+
+// Public Reference Data APIs (no authentication required)
+Route::prefix('reference')->group(function () {
+    Route::get('/skills', [ReferenceController::class, 'skills'])->middleware('ratelimit:100,60');
+    Route::get('/countries', [ReferenceController::class, 'countries'])->middleware('ratelimit:100,60');
+    Route::get('/states', [ReferenceController::class, 'states'])->middleware('ratelimit:100,60');
+    Route::get('/cities', [ReferenceController::class, 'cities'])->middleware('ratelimit:100,60');
+    Route::get('/areas', [ReferenceController::class, 'areas'])->middleware('ratelimit:100,60');
+    Route::get('/employment-types', [ReferenceController::class, 'employmentTypes'])->middleware('ratelimit:100,60');
+    Route::get('/job-statuses', [ReferenceController::class, 'jobStatuses'])->middleware('ratelimit:100,60');
+    Route::get('/all', [ReferenceController::class, 'all'])->middleware('ratelimit:50,60');
+});
 
 
 
@@ -85,12 +98,20 @@ Route::middleware('auth:api')->group(function () {
     
     // Candidate API Routes
     Route::middleware('role:candidate')->prefix('candidate')->group(function () {
+        // Profile routes
+        Route::prefix('profile')->group(function () {
+            Route::post('resume', [App\Http\Controllers\API\Candidate\ProfileController::class, 'uploadResume'])
+                ->middleware('throttle:5,60'); // 5 uploads per hour
+            Route::get('resume', [App\Http\Controllers\API\Candidate\ProfileController::class, 'getResume']);
+            Route::delete('resume', [App\Http\Controllers\API\Candidate\ProfileController::class, 'deleteResume']);
+        });
+        
         // Job Discovery
         Route::get('jobs', [CandidateJobController::class, 'index']);
         Route::get('jobs/{id}', [CandidateJobController::class, 'show']);
         
         // Rate limit job application endpoint (10 applications per 60 minutes to prevent abuse)
-        Route::post('jobs/{id}/apply', [CandidateJobController::class, 'apply'])->middleware('ratelimit:10,60');
+        Route::post('jobs/{id}/apply', [CandidateApplicationController::class, 'apply'])->middleware('ratelimit:10,60');
         
         Route::get('jobs/{id}/similar', [CandidateJobController::class, 'similar']);
         Route::post('jobs/{id}/bookmark', [CandidateJobController::class, 'bookmark']);

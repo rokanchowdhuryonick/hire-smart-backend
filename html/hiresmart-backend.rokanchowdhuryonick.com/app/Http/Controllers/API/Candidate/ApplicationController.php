@@ -5,8 +5,10 @@ namespace App\Http\Controllers\API\Candidate;
 use App\Http\Controllers\Controller;
 use App\Services\ApplicationService;
 use App\Models\Application;
+use App\Models\JobPosting;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ApplicationController extends Controller
@@ -170,6 +172,73 @@ class ApplicationController extends Controller
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Apply to a job posting
+     * 
+     * @param int $jobId
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function apply(int $jobId, Request $request): JsonResponse
+    {
+        try {
+            $user = JWTAuth::user();
+            
+            // Check if candidate has uploaded a resume
+            $profile = $user->profile;
+            if (!$profile || !$profile->resume_path) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Please upload your resume to your profile before applying to jobs.',
+                    'action_required' => 'upload_resume',
+                ], 422);
+            }
+
+            // Validate optional cover letter or additional info
+            $validator = Validator::make($request->all(), [
+                'cover_letter' => 'nullable|string|max:2000',
+                'additional_info' => 'nullable|string|max:1000',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            // Get job posting
+            $job = JobPosting::findOrFail($jobId);
+
+            // Apply to job using ApplicationService with profile resume
+            $applicationData = [
+                'resume_path' => $profile->resume_path,
+                'cover_letter' => $request->input('cover_letter'),
+                'additional_info' => $request->input('additional_info'),
+            ];
+
+            $application = $this->applicationService->applyToJob($job, $user, $applicationData);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Application submitted successfully',
+                'data' => [
+                    'application_id' => $application->id,
+                    'job_id' => $jobId,
+                    'resume_used' => basename($profile->resume_path),
+                    'applied_at' => $application->applied_at,
+                ],
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], $e->getCode() ?: 500);
         }
     }
 
